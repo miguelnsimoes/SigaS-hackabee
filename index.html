@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sigaS - Sistema Municipal de Saúde</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        vida: {
+                            bg: '#0F1923',
+                            card: '#1A2535',
+                            cyan: '#00D4FF',
+                            green: '#00E676',
+                            hover: '#233044'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #0F1923;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0F1923; }
+        ::-webkit-scrollbar-thumb { background: #1A2535; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00D4FF; }
+
+        .glass-card {
+            background: rgba(26, 37, 53, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Checkbox Personalizado */
+        .custom-checkbox:checked + div {
+            background-color: rgba(0, 212, 255, 0.2);
+            border-color: #00D4FF;
+            color: #00D4FF;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased h-screen flex flex-col relative">
+
+    <!-- NOTIFICAÇÃO TOAST -->
+    <div id="toast" class="fixed top-4 right-4 z-50 transform transition-all duration-300 translate-y-[-150%] opacity-0 bg-vida-card border-l-4 border-vida-cyan text-white p-4 rounded shadow-lg flex items-center gap-3">
+        <i data-lucide="info" class="w-5 h-5 text-vida-cyan"></i>
+        <span id="toast-message">Mensagem</span>
+    </div>
+
+    <!-- ECRÃ 1: LOGIN -->
+    <div id="login-screen" class="absolute inset-0 z-40 flex items-center justify-center bg-vida-bg p-4 transition-opacity duration-500">
+        <div class="glass-card w-full max-w-md p-8 rounded-2xl animate-slide-up">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-vida-card rounded-full mb-4 shadow-lg border border-gray-700 p-2">
+                    <!-- LOGO DO SISTEMA -->
+                    <img src="sigas.svg" alt="Logotipo sigaS" class="w-full h-full object-contain">
+                </div>
+                <h1 class="text-3xl font-bold text-white tracking-tight">siga<span class="text-vida-cyan">S</span></h1>
+                <p class="text-gray-400 mt-2 text-sm uppercase tracking-wider">Sistema Municipal de Saúde</p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Perfil de Acesso</label>
+                    <select id="role-select" class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-vida-cyan focus:border-transparent block p-3 outline-none cursor-pointer">
+                        <option value="profissional">Médico / Enfermeiro (Atendimento)</option>
+                        <option value="gestor">Gestor Municipal de Saúde (Dashboard)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full text-vida-bg bg-vida-cyan hover:bg-opacity-90 font-bold rounded-lg text-md px-5 py-3 text-center transition-all flex items-center justify-center gap-2">
+                    <span>Entrar no Sistema</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ESTRUTURA PRINCIPAL DA APLICAÇÃO -->
+    <div id="main-app" class="hidden h-full flex w-full">
+        
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <aside class="w-64 bg-vida-card border-r border-gray-800 flex flex-col transition-all duration-300 z-20 hidden md:flex shrink-0">
+            <div class="p-6 border-b border-gray-800 flex items-center gap-3">
+                <img src="sigas.svg" alt="Logotipo sigaS" class="w-8 h-8 object-contain">
+                <h2 class="text-2xl font-bold text-white tracking-tight">siga<span class="text-vida-cyan">S</span></h2>
+            </div>
+            <div class="p-4 border-b border-gray-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-vida-cyan to-vida-green flex items-center justify-center text-vida-bg font-bold">
+                    <span id="user-initial">P</span>
+                </div>
+                <div>
+                    <p id="user-name-display" class="text-sm font-medium text-white truncate">Utilizador</p>
+                    <p id="user-role-display" class="text-xs text-gray-400 truncate">Perfil</p>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebar-nav"></nav>
+            <div class="p-4 border-t border-gray-800">
+                <button onclick="logout()" class="flex items-center gap-3 text-gray-400 hover:text-red-400 hover:bg-red-400/10 w-full p-3 rounded-lg transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <span class="font-medium">Sair do Sistema</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- CABEÇALHO MOBILE -->
+        <header class="md:hidden bg-vida-card border-b border-gray-800 p-4 flex justify-between items-center z-10 shrink-0 absolute w-full">
+            <div class="flex items-center gap-2">
+                <img src="sigas.svg" alt="Logotipo sigaS" class="w-7 h-7 object-contain">
+                <span class="font-bold text-xl text-white">siga<span class="text-vida-cyan">S</span></span>
+            </div>
+            <button onclick="toggleMobileMenu()" class="text-gray-300"><i data-lucide="menu" class="w-6 h-6"></i></button>
+        </header>
+        <div id="mobile-menu" class="md:hidden fixed inset-0 bg-vida-bg/95 backdrop-blur z-30 hidden flex-col pt-16">
+            <button onclick="toggleMobileMenu()" class="absolute top-4 right-4 text-gray-300"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <nav id="mobile-nav" class="p-4 flex flex-col gap-2"></nav>
+        </div>
+
+        <!-- CONTENTOR DE VISTAS (VIEWS) -->
+        <main class="flex-1 flex flex-col h-full overflow-y-auto relative pt-16 md:pt-0 scroll-smooth">
+            <div class="p-4 md:p-8 w-full max-w-7xl mx-auto">
+
+                <!-- ==========================================
+                     ECRÃ 2: PERFIL DO PACIENTE (PRÉ-CARREGADO)
+                     ========================================== -->
+                <div id="view-profissional" class="view-section hidden animate-fade-in space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Atendimento ao Paciente</h2>
+                        <p class="text-gray-400 text-sm">Busque o histórico unificado da rede municipal.</p>
+                    </div>
+
+                    <!-- Caixa de Pesquisa -->
+                    <div class="glass-card p-6 rounded-xl">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1 relative">
+                                <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"></i>
+                                <input type="text" id="search-input" placeholder="Pesquisar por Nome ou CPF..." class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg pl-10 p-3 outline-none focus:border-vida-cyan transition-colors">
+                            </div>
+                            <button onclick="searchPatient()" class="bg-vida-card hover:bg-vida-hover border border-gray-600 text-white font-medium rounded-lg px-6 py-3 transition-colors">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Perfil do Paciente -->
+                    <div id="patient-data-container" class="hidden space-y-6">
+                        <div class="glass-card p-6 rounded-xl border-l-4 border-l-vida-cyan flex flex-col md:flex-row items-start justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-2xl font-bold"><span id="pat-initial">J</span></div>
+                                <div>
+                                    <h3 id="pat-name" class="text-xl font-bold text-white">João Silva</h3>
+                                    <div class="flex flex-wrap gap-4 text-sm text-gray-400 mt-1">
+                                        <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-4 h-4"></i> <span id="pat-age">45 anos</span></span>
+                                        <span class="flex items-center gap-1"><i data-lucide="credit-card" class="w-4 h-4"></i> <span id="pat-cpf">123.456.789-00</span></span>
+                                        <span class="flex items-center gap-1 text-vida-cyan"><i data-lucide="map-pin" class="w-4 h-4"></i> Região: <span id="pat-bairro" class="font-medium">Centro</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- BOTÃO NOVO ATENDIMENTO -->
+                            <button onclick="openRegistroClinico()" class="w-full md:w-auto bg-vida-green hover:bg-opacity-90 text-vida-bg font-bold rounded-lg px-5 py-3 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-vida-green/20">
+                                <i data-lucide="stethoscope" class="w-5 h-5"></i> Registrar Novo Atendimento
+                            </button>
+                        </div>
+
+                        <!-- Histórico de Exames -->
+                        <div class="glass-card rounded-xl overflow-hidden">
+                            <div class="p-5 border-b border-gray-700 flex justify-between items-center bg-gray-800/30">
+                                <h4 class="text-lg font-semibold text-white">Exames Anteriores na Rede</h4>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-gray-300">
+                                    <thead class="text-xs uppercase bg-[#0F1923] text-gray-400">
+                                        <tr>
+                                            <th class="px-6 py-4">Exame</th>
+                                            <th class="px-6 py-4">Data</th>
+                                            <th class="px-6 py-4">Local</th>
+                                            <th class="px-6 py-4">Resultado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="exams-table-body" class="divide-y divide-gray-800">
+                                        <!-- Injetado via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     NOVA TELA: REGISTRO CLÍNICO E SINTOMAS
+                     ========================================== -->
+                <div id="view-registro" class="view-section hidden animate-fade-in space-y-6 max-w-4xl mx-auto">
+                    
+                    <button onclick="switchView('profissional')" class="text-vida-cyan hover:text-white flex items-center gap-2 text-sm font-medium transition-colors mb-4">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao Perfil do Paciente
+                    </button>
+
+                    <div class="glass-card p-6 rounded-xl border-t-4 border-t-vida-green">
+                        <div class="flex justify-between items-end mb-6 pb-4 border-b border-gray-800">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white">Registro de Prontuário</h2>
+                                <p class="text-gray-400 text-sm mt-1">Paciente: <span id="reg-pat-name" class="font-bold text-white">João Silva</span></p>
+                            </div>
+                            <div class="text-sm text-gray-500">Data: <span id="reg-date">25/04/2026</span></div>
+                        </div>
+
+                        <form id="form-atendimento" class="space-y-8" onsubmit="salvarAtendimento(event)">
+                            
+                            <!-- Bloco 1: Alergias -->
+                            <div>
+                                <h3 class="text-white font-medium mb-3 flex items-center gap-2">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i> Alergias e Restrições
+                                </h3>
+                                <input type="text" id="reg-alergias" placeholder="Ex: Dipirona, Penicilina, Frutos do mar (Deixe em branco se não houver)" class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg p-3 outline-none focus:border-amber-500 transition-colors">
+                            </div>
+
+                            <!-- Bloco 2: Sintomas -->
+                            <div>
+                                <h3 class="text-white font-medium mb-3 flex items-center gap-2">
+                                    <i data-lucide="activity" class="w-5 h-5 text-vida-cyan"></i> Sintomas Relatados
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <label class="cursor-pointer relative">
+                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Febre">
+                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Febre</div>
+                                    </label>
+                                    <label class="cursor-pointer relative">
+                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Dor no corpo">
+                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Dor no corpo</div>
+                                    </label>
+                                    <label class="cursor-pointer relative">
+                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Manchas na pele">
+                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Manchas na pele</div>
+                                    </label>
+                                    <label class="cursor-pointer relative">
+                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Tosse">
+                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Tosse</div>
+                                    </label>
+                                    <label class="cursor-pointer relative">
+                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Falta de ar">
+                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Falta de ar</div>
+                                    </label>
+                                    <label class="cursor-pointer relative">
+                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Coriza">
+                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Coriza</div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Bloco 3: Diagnóstico -->
+                            <div class="bg-vida-bg p-5 rounded-xl border border-gray-700">
+                                <h3 class="text-white font-medium mb-3 flex items-center gap-2">
+                                    <i data-lucide="microscope" class="w-5 h-5 text-purple-400"></i> Diagnóstico (Presuntivo / Confirmado)
+                                </h3>
+                                <p class="text-xs text-gray-400 mb-3">Este dado alimenta diretamente o painel epidemiológico do município.</p>
+                                <select id="reg-diagnostico" required class="w-full bg-[#1A2535] border border-gray-600 text-white rounded-lg p-3 outline-none focus:border-purple-400 cursor-pointer">
+                                    <option value="">Selecione a doença detetada...</option>
+                                    <option value="Dengue">Dengue</option>
+                                    <option value="COVID-19">COVID-19</option>
+                                    <option value="Gripe/Virose">Gripe / Virose Comum</option>
+                                    <option value="Zika/Chikungunya">Zika / Chikungunya</option>
+                                    <option value="Outros">Outros / Em investigação</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="w-full bg-vida-cyan text-vida-bg font-bold rounded-lg px-6 py-4 hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 text-lg">
+                                <i data-lucide="save" class="w-6 h-6"></i> Salvar e Alimentar Sistema
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+
+                <!-- ==========================================
+                     ECRÃ 3: DASHBOARD EPIDEMIOLÓGICO (GERAL)
+                     ========================================== -->
+                <div id="view-dashboard" class="view-section hidden animate-fade-in w-full space-y-6 pb-10">
+                    
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Painel Epidemiológico Municipal</h2>
+                        <p class="text-gray-400 text-sm">Monitorização de doenças e atendimentos por região em tempo real.</p>
+                    </div>
+
+                    <!-- CARTÕES DE TOPO -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="glass-card p-5 rounded-xl border-t-2 border-t-vida-cyan">
+                            <p class="text-sm text-gray-400 font-medium mb-1">Total de Atendimentos</p>
+                            <h3 class="text-3xl font-bold text-white" id="dash-total-atendimentos">1.245</h3>
+                        </div>
+                        <div class="glass-card p-5 rounded-xl border-t-2 border-t-vida-green">
+                            <p class="text-sm text-gray-400 font-medium mb-1">Doença Predominante</p>
+                            <h3 class="text-2xl font-bold text-white text-vida-green" id="dash-doenca-top">Dengue</h3>
+                        </div>
+                        <div class="glass-card p-5 rounded-xl border-t-2 border-t-red-500">
+                            <p class="text-sm text-gray-400 font-medium mb-1">Região Crítica (Maior Volume)</p>
+                            <h3 class="text-2xl font-bold text-white text-red-400" id="dash-regiao-critica">Centro</h3>
+                        </div>
+                    </div>
+
+                    <!-- GRÁFICO: DOENÇAS POR REGIÃO -->
+                    <div class="glass-card p-5 rounded-xl flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-5 h-5 text-purple-400"></i> Distribuição de Doenças por Região
+                            </h3>
+                            <span class="bg-purple-400/10 text-purple-400 text-xs px-2 py-1 rounded border border-purple-400/20">Ao vivo</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-4">Atualizado automaticamente a cada novo registo clínico feito nas UBS.</p>
+                        <div class="flex-1 relative w-full h-[350px]">
+                            <canvas id="chartDoencasRegiao"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <!-- MAPA DE CALOR DA CIDADE (IMAGEM) -->
+                        <div class="glass-card p-5 rounded-xl flex flex-col relative" id="heat-map-container">
+                            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="map" class="w-5 h-5 text-vida-cyan"></i> Mapa de Calor Municipal
+                            </h3>
+                                <div class="flex-1 bg-[#0F1923] rounded-lg border border-gray-700 p-1 relative overflow-hidden h-[250px]">
+                                  <img src="mapa_calor.jpg" alt="Mapa de Calor de Cornélio Procópio" class="w-full h-full object-cover rounded-md">
+                                </div>
+                        </div>
+
+                        <!-- LISTA DE ALERTAS -->
+                        <div class="glass-card p-5 rounded-xl">
+                            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="siren" class="w-5 h-5 text-red-500"></i> Alertas Gerados
+                            </h3>
+                            <div class="space-y-3" id="alert-list">
+                                <!-- Conteúdo Dinâmico -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPTS E LÓGICA (MOCKADA) -->
+    <script>
+        lucide.createIcons();
+
+        // ==========================================
+        // BASE DE DADOS MOCKADA & DINÂMICA
+        // ==========================================
+        // APENAS JOÃO SILVA NO SISTEMA (PRÉ-CARREGADO)
+        const pacientes = [
+            { id: 1, nome: "João Silva", idade: 45, cpf: "123.456.789-00", bairro: "Centro" }
+        ];
+
+        const exames = [
+            { pacId: 1, tipo: "Hemograma Completo", data: "10/04/2026", res: "Normal" }
+        ];
+
+        let dadosEpidemiologicos = {
+            "Centro":       { "Dengue": 42, "COVID-19": 12, "Gripe/Virose": 28 },
+            "Jardim Norte": { "Dengue": 15, "COVID-19": 5,  "Gripe/Virose": 35 },
+            "Vila Sul":     { "Dengue": 8,  "COVID-19": 18, "Gripe/Virose": 14 }
+        };
+
+        let totalAtendimentos = 1245;
+        let currentPatient = null;
+        let chartInstances = {};
+
+        // ==========================================
+        // CONTROLO DE VISTAS (TELAS)
+        // ==========================================
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const role = document.getElementById('role-select').value;
+            
+            document.getElementById('login-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                setupLayout(role);
+            }, 500);
+        });
+
+        function logout() {
+            document.getElementById('main-app').classList.add('hidden');
+            const login = document.getElementById('login-screen');
+            login.classList.remove('hidden');
+            setTimeout(() => { login.style.opacity = '1'; }, 50);
+            
+            currentPatient = null;
+            document.getElementById('patient-data-container').classList.add('hidden');
+            document.getElementById('search-input').value = '';
+        }
+
+        function setupLayout(role) {
+            const navContainer = document.getElementById('sidebar-nav');
+            const mobileNavContainer = document.getElementById('mobile-nav');
+
+            if (role === 'profissional') {
+                document.getElementById('user-role-display').innerText = 'Médico / Enf.';
+                document.getElementById('user-name-display').innerText = 'Dra. Ana';
+                navContainer.innerHTML = `
+                    <a href="javascript:void(0)" onclick="switchView('profissional')" data-target="profissional" class="nav-item flex items-center gap-3 bg-vida-hover text-vida-cyan p-3 rounded-lg border-l-4 border-vida-cyan transition-colors">
+                        <i data-lucide="users" class="w-5 h-5"></i> Pacientes
+                    </a>
+                    <a href="javascript:void(0)" onclick="switchView('dashboard')" data-target="dashboard" class="nav-item flex items-center gap-3 text-gray-400 border-l-4 border-transparent hover:text-white p-3 rounded-lg transition-colors mt-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5"></i> Dashboard
+                    </a>
+                `;
+                switchView('profissional');
+                
+                // Pré-carrega o João Silva automaticamente
+                document.getElementById('search-input').value = '123.456.789-00';
+                searchPatient();
+                
+            } else {
+                document.getElementById('user-role-display').innerText = 'Gestor Municipal';
+                document.getElementById('user-name-display').innerText = 'Sec. Roberto';
+                navContainer.innerHTML = `
+                    <a href="javascript:void(0)" onclick="switchView('dashboard')" data-target="dashboard" class="nav-item flex items-center gap-3 bg-vida-hover text-vida-green p-3 rounded-lg border-l-4 border-vida-green transition-colors">
+                        <i data-lucide="pie-chart" class="w-5 h-5"></i> Dashboard
+                    </a>
+                `;
+                switchView('dashboard');
+            }
+            mobileNavContainer.innerHTML = navContainer.innerHTML;
+            lucide.createIcons();
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            if(window.innerWidth < 768) toggleMobileMenu(true);
+            
+            const activeTarget = viewId === 'registro' ? 'profissional' : viewId;
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const target = item.getAttribute('data-target');
+                item.classList.remove('bg-vida-hover', 'text-vida-cyan', 'border-vida-cyan', 'text-vida-green', 'border-vida-green', 'text-gray-400', 'border-transparent');
+                
+                if (target === activeTarget) {
+                    item.classList.add('bg-vida-hover');
+                    if (target === 'dashboard') {
+                        item.classList.add('text-vida-green', 'border-vida-green');
+                    } else {
+                        item.classList.add('text-vida-cyan', 'border-vida-cyan');
+                    }
+                } else {
+                    item.classList.add('text-gray-400', 'border-transparent');
+                }
+            });
+
+            // Re-renderiza o dashboard ao aceder
+            if(viewId === 'dashboard') {
+                renderDashboardData();
+            } else if (viewId === 'profissional' && currentPatient) {
+                document.getElementById('patient-data-container').classList.remove('hidden');
+            }
+        }
+
+        function toggleMobileMenu(forceClose = false) {
+            const menu = document.getElementById('mobile-menu');
+            if (forceClose || !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            } else {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-150%)'; }, 4000);
+        }
+
+        // ==========================================
+        // LÓGICA DO PROFISSIONAL (PESQUISA E REGISTO)
+        // ==========================================
+        
+        function searchPatient() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const found = pacientes.find(p => p.nome.toLowerCase().includes(query) || p.cpf.includes(query));
+
+            if (found) {
+                currentPatient = found;
+                document.getElementById('pat-name').innerText = found.nome;
+                document.getElementById('pat-initial').innerText = found.nome.charAt(0);
+                document.getElementById('pat-age').innerText = `${found.idade} anos`;
+                document.getElementById('pat-cpf').innerText = found.cpf;
+                document.getElementById('pat-bairro').innerText = found.bairro;
+
+                const tbody = document.getElementById('exams-table-body');
+                tbody.innerHTML = '';
+                const pacExames = exames.filter(e => e.pacId === found.id);
+                if(pacExames.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum exame cadastrado.</td></tr>`;
+                } else {
+                    pacExames.forEach(ex => {
+                        tbody.innerHTML += `
+                            <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
+                                <td class="px-6 py-4 text-white">${ex.tipo}</td>
+                                <td class="px-6 py-4">${ex.data}</td>
+                                <td class="px-6 py-4">Rede Municipal</td>
+                                <td class="px-6 py-4">
+                                    <button onclick="showToast('A abrir o PDF do exame...')" class="flex items-center gap-2 text-vida-cyan hover:text-white bg-vida-cyan/10 hover:bg-vida-cyan/20 px-3 py-1.5 rounded transition-colors" title="Visualizar Documento">
+                                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                                        <span class="text-xs font-medium">Ver Laudo</span>
+                                    </button>
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                document.getElementById('patient-data-container').classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                showToast("Paciente não encontrado. O sistema de testes suporta apenas o paciente João Silva.");
+            }
+        }
+
+        function openRegistroClinico() {
+            if(!currentPatient) return;
+            document.getElementById('reg-pat-name').innerText = currentPatient.nome;
+            document.getElementById('form-atendimento').reset();
+            switchView('registro');
+        }
+
+        function salvarAtendimento(e) {
+            e.preventDefault();
+            
+            const diagnostico = document.getElementById('reg-diagnostico').value;
+            const bairro = currentPatient.bairro;
+
+            if(!diagnostico) return;
+
+            if(dadosEpidemiologicos[bairro] && dadosEpidemiologicos[bairro][diagnostico] !== undefined) {
+                dadosEpidemiologicos[bairro][diagnostico] += 1;
+            } else {
+                if(!dadosEpidemiologicos[bairro]) dadosEpidemiologicos[bairro] = {};
+                dadosEpidemiologicos[bairro][diagnostico] = (dadosEpidemiologicos[bairro][diagnostico] || 0) + 1;
+            }
+            
+            totalAtendimentos += 1;
+
+            showToast(`Atendimento salvo! Diagnóstico de ${diagnostico} adicionado à região ${bairro}.`);
+            switchView('profissional'); // Volta para o perfil (que já está carregado)
+        }
+
+        // ==========================================
+        // LÓGICA DO GESTOR (DASHBOARD DINÂMICO & MAPA)
+        // ==========================================
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.font.family = '"Plus Jakarta Sans", sans-serif';
+
+        function renderDashboardData() {
+            document.getElementById('dash-total-atendimentos').innerText = totalAtendimentos.toLocaleString();
+
+            let maxCasos = 0;
+            let regiaoCritica = "";
+            let somaDoencas = {};
+
+            Object.keys(dadosEpidemiologicos).forEach(bairro => {
+                let somaBairro = 0;
+                Object.keys(dadosEpidemiologicos[bairro]).forEach(doenca => {
+                    let qtd = dadosEpidemiologicos[bairro][doenca];
+                    somaBairro += qtd;
+                    somaDoencas[doenca] = (somaDoencas[doenca] || 0) + qtd;
+                });
+                if(somaBairro > maxCasos) { maxCasos = somaBairro; regiaoCritica = bairro; }
+            });
+
+            let topDoenca = Object.keys(somaDoencas).reduce((a, b) => somaDoencas[a] > somaDoencas[b] ? a : b);
+
+            document.getElementById('dash-regiao-critica').innerText = regiaoCritica;
+            document.getElementById('dash-doenca-top').innerText = topDoenca;
+
+            document.getElementById('alert-list').innerHTML = `
+                <div class="bg-red-500/10 border-l-4 border-red-500 p-3 rounded flex gap-3">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-red-500"></i>
+                    <div><h4 class="text-white text-sm font-bold">Atenção em ${regiaoCritica}</h4><p class="text-xs text-gray-400">Região concentra o maior volume de casos da rede municipal.</p></div>
+                </div>
+                <div class="bg-amber-500/10 border-l-4 border-amber-500 p-3 rounded flex gap-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-amber-500"></i>
+                    <div><h4 class="text-white text-sm font-bold">Alerta de ${topDoenca}</h4><p class="text-xs text-gray-400">Principal causa de atendimentos hoje.</p></div>
+                </div>
+            `;
+            lucide.createIcons();
+            
+            // Renderiza o gráfico de barras
+            initCharts();
+        }
+
+        function initCharts() {
+            if(chartInstances['reg']) chartInstances['reg'].destroy();
+
+            const bairros = Object.keys(dadosEpidemiologicos); 
+            let todasDoencas = new Set();
+            bairros.forEach(b => Object.keys(dadosEpidemiologicos[b]).forEach(d => todasDoencas.add(d)));
+            todasDoencas = Array.from(todasDoencas);
+
+            const cores = {
+                "Dengue": "#ef4444",        // Vermelho
+                "COVID-19": "#00D4FF",      // Ciano
+                "Gripe/Virose": "#00E676",  // Verde
+                "Zika/Chikungunya": "#A855F7", // Roxo
+                "Outros": "#6b7280"         // Cinzento
+            };
+
+            const datasets = todasDoencas.map(doenca => {
+                return {
+                    label: doenca,
+                    backgroundColor: cores[doenca] || "#ffffff",
+                    data: bairros.map(bairro => dadosEpidemiologicos[bairro][doenca] || 0),
+                    borderRadius: 4
+                };
+            });
+
+            const ctxReg = document.getElementById('chartDoencasRegiao').getContext('2d');
+            chartInstances['reg'] = new Chart(ctxReg, {
+                type: 'bar',
+                data: {
+                    labels: bairros,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, color: '#e2e8f0' } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
