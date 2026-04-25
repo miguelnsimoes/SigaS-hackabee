@@ -102,14 +102,8 @@
             </div>
 
             <form id="login-form" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Perfil de Acesso</label>
-                    <select id="role-select" class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-vida-cyan focus:border-transparent block p-3 outline-none cursor-pointer">
-                        <option value="profissional">Médico / Enfermeiro (Atendimento)</option>
-                        <option value="gestor">Gestor Municipal de Saúde (Dashboard)</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full text-vida-bg bg-vida-cyan hover:bg-opacity-90 font-bold rounded-lg text-md px-5 py-3 text-center transition-all flex items-center justify-center gap-2">
+                <!-- Select de perfil removido conforme solicitado -->
+                <button type="submit" class="w-full text-vida-bg bg-vida-cyan hover:bg-opacity-90 font-bold rounded-lg text-md px-5 py-3 text-center transition-all flex items-center justify-center gap-2 mt-4">
                     <span>Entrar no Sistema</span>
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
                 </button>
@@ -170,14 +164,15 @@
                         <p class="text-gray-400 text-sm">Busque o histórico unificado da rede municipal.</p>
                     </div>
 
-                    <!-- Caixa de Pesquisa -->
+                    <!-- Caixa de Pesquisa Estática (Readonly) -->
                     <div class="glass-card p-6 rounded-xl">
                         <div class="flex flex-col md:flex-row gap-4">
                             <div class="flex-1 relative">
-                                <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"></i>
-                                <input type="text" id="search-input" placeholder="Pesquisar por Nome ou CPF..." class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg pl-10 p-3 outline-none focus:border-vida-cyan transition-colors">
+                                <i data-lucide="search" class="w-5 h-5 text-gray-500 absolute left-3 top-3.5"></i>
+                                <!-- Input bloqueado (readonly) e com estilo de desativado -->
+                                <input type="text" id="search-input" value="123.456.789-00" readonly class="w-full bg-[#0b1219] border border-gray-800 text-gray-400 rounded-lg pl-10 p-3 outline-none cursor-not-allowed select-none">
                             </div>
-                            <button onclick="searchPatient()" class="bg-vida-card hover:bg-vida-hover border border-gray-600 text-white font-medium rounded-lg px-6 py-3 transition-colors">Buscar</button>
+                            <!-- Botão removido, já que é estático -->
                         </div>
                     </div>
 
@@ -357,9 +352,10 @@
                             <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                                 <i data-lucide="map" class="w-5 h-5 text-vida-cyan"></i> Mapa de Calor Municipal
                             </h3>
-                                <div class="flex-1 bg-[#0F1923] rounded-lg border border-gray-700 p-1 relative overflow-hidden h-[250px]">
-                                  <img src="mapa_calor.jpg" alt="Mapa de Calor de Cornélio Procópio" class="w-full h-full object-cover rounded-md">
-                                </div>
+                            <div class="flex-1 bg-[#0F1923] rounded-lg border border-gray-700 p-1 relative overflow-hidden min-h-[250px]">
+                                <!-- Imagem estática do Mapa de Calor -->
+                                <img src="mapa_calor.jpg" alt="Mapa de Calor de Cornélio Procópio" class="w-full h-full object-cover rounded-md">
+                            </div>
                         </div>
 
                         <!-- LISTA DE ALERTAS -->
@@ -410,7 +406,7 @@
         // ==========================================
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const role = document.getElementById('role-select').value;
+            const role = 'profissional'; // Forçado a ser sempre profissional
             
             document.getElementById('login-screen').style.opacity = '0';
             setTimeout(() => {
@@ -426,42 +422,28 @@
             login.classList.remove('hidden');
             setTimeout(() => { login.style.opacity = '1'; }, 50);
             
-            currentPatient = null;
-            document.getElementById('patient-data-container').classList.add('hidden');
-            document.getElementById('search-input').value = '';
+            // O paciente João continuará a ser carregado ao entrar de novo
         }
 
         function setupLayout(role) {
             const navContainer = document.getElementById('sidebar-nav');
             const mobileNavContainer = document.getElementById('mobile-nav');
 
-            if (role === 'profissional') {
-                document.getElementById('user-role-display').innerText = 'Médico / Enf.';
-                document.getElementById('user-name-display').innerText = 'Dra. Ana';
-                navContainer.innerHTML = `
-                    <a href="javascript:void(0)" onclick="switchView('profissional')" data-target="profissional" class="nav-item flex items-center gap-3 bg-vida-hover text-vida-cyan p-3 rounded-lg border-l-4 border-vida-cyan transition-colors">
-                        <i data-lucide="users" class="w-5 h-5"></i> Pacientes
-                    </a>
-                    <a href="javascript:void(0)" onclick="switchView('dashboard')" data-target="dashboard" class="nav-item flex items-center gap-3 text-gray-400 border-l-4 border-transparent hover:text-white p-3 rounded-lg transition-colors mt-2">
-                        <i data-lucide="pie-chart" class="w-5 h-5"></i> Dashboard
-                    </a>
-                `;
-                switchView('profissional');
-                
-                // Pré-carrega o João Silva automaticamente
-                document.getElementById('search-input').value = '123.456.789-00';
-                searchPatient();
-                
-            } else {
-                document.getElementById('user-role-display').innerText = 'Gestor Municipal';
-                document.getElementById('user-name-display').innerText = 'Sec. Roberto';
-                navContainer.innerHTML = `
-                    <a href="javascript:void(0)" onclick="switchView('dashboard')" data-target="dashboard" class="nav-item flex items-center gap-3 bg-vida-hover text-vida-green p-3 rounded-lg border-l-4 border-vida-green transition-colors">
-                        <i data-lucide="pie-chart" class="w-5 h-5"></i> Dashboard
-                    </a>
-                `;
-                switchView('dashboard');
-            }
+            document.getElementById('user-role-display').innerText = 'Médico / Enf.';
+            document.getElementById('user-name-display').innerText = 'Dra. Ana';
+            
+            navContainer.innerHTML = `
+                <a href="javascript:void(0)" onclick="switchView('profissional')" data-target="profissional" class="nav-item flex items-center gap-3 bg-vida-hover text-vida-cyan p-3 rounded-lg border-l-4 border-vida-cyan transition-colors">
+                    <i data-lucide="users" class="w-5 h-5"></i> Pacientes
+                </a>
+                <a href="javascript:void(0)" onclick="switchView('dashboard')" data-target="dashboard" class="nav-item flex items-center gap-3 text-gray-400 border-l-4 border-transparent hover:text-white p-3 rounded-lg transition-colors mt-2">
+                    <i data-lucide="pie-chart" class="w-5 h-5"></i> Dashboard
+                </a>
+            `;
+            
+            switchView('profissional');
+            searchPatient(); // Pré-carrega o João automaticamente ao entrar
+            
             mobileNavContainer.innerHTML = navContainer.innerHTML;
             lucide.createIcons();
         }
@@ -521,44 +503,41 @@
         // ==========================================
         
         function searchPatient() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const found = pacientes.find(p => p.nome.toLowerCase().includes(query) || p.cpf.includes(query));
+            // Como agora é estático, o query é sempre o mesmo
+            const query = "123.456.789-00"; 
+            const found = pacientes[0]; // João
 
-            if (found) {
-                currentPatient = found;
-                document.getElementById('pat-name').innerText = found.nome;
-                document.getElementById('pat-initial').innerText = found.nome.charAt(0);
-                document.getElementById('pat-age').innerText = `${found.idade} anos`;
-                document.getElementById('pat-cpf').innerText = found.cpf;
-                document.getElementById('pat-bairro').innerText = found.bairro;
+            currentPatient = found;
+            document.getElementById('pat-name').innerText = found.nome;
+            document.getElementById('pat-initial').innerText = found.nome.charAt(0);
+            document.getElementById('pat-age').innerText = `${found.idade} anos`;
+            document.getElementById('pat-cpf').innerText = found.cpf;
+            document.getElementById('pat-bairro').innerText = found.bairro;
 
-                const tbody = document.getElementById('exams-table-body');
-                tbody.innerHTML = '';
-                const pacExames = exames.filter(e => e.pacId === found.id);
-                if(pacExames.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum exame cadastrado.</td></tr>`;
-                } else {
-                    pacExames.forEach(ex => {
-                        tbody.innerHTML += `
-                            <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
-                                <td class="px-6 py-4 text-white">${ex.tipo}</td>
-                                <td class="px-6 py-4">${ex.data}</td>
-                                <td class="px-6 py-4">Rede Municipal</td>
-                                <td class="px-6 py-4">
-                                    <button onclick="showToast('A abrir o PDF do exame...')" class="flex items-center gap-2 text-vida-cyan hover:text-white bg-vida-cyan/10 hover:bg-vida-cyan/20 px-3 py-1.5 rounded transition-colors" title="Visualizar Documento">
-                                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                                        <span class="text-xs font-medium">Ver Laudo</span>
-                                    </button>
-                                </td>
-                            </tr>`;
-                    });
-                }
-
-                document.getElementById('patient-data-container').classList.remove('hidden');
-                lucide.createIcons();
+            const tbody = document.getElementById('exams-table-body');
+            tbody.innerHTML = '';
+            const pacExames = exames.filter(e => e.pacId === found.id);
+            if(pacExames.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum exame cadastrado.</td></tr>`;
             } else {
-                showToast("Paciente não encontrado. O sistema de testes suporta apenas o paciente João Silva.");
+                pacExames.forEach(ex => {
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
+                            <td class="px-6 py-4 text-white">${ex.tipo}</td>
+                            <td class="px-6 py-4">${ex.data}</td>
+                            <td class="px-6 py-4">Rede Municipal</td>
+                            <td class="px-6 py-4">
+                                <button onclick="showToast('A abrir o PDF do exame...')" class="flex items-center gap-2 text-vida-cyan hover:text-white bg-vida-cyan/10 hover:bg-vida-cyan/20 px-3 py-1.5 rounded transition-colors" title="Visualizar Documento">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    <span class="text-xs font-medium">Ver Laudo</span>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
             }
+
+            document.getElementById('patient-data-container').classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function openRegistroClinico() {
