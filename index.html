@@ -79,6 +79,22 @@
             border-color: #00D4FF;
             color: #00D4FF;
         }
+
+        /* Estilo para o input de ficheiro */
+        input[type="file"]::file-selector-button {
+            background-color: #00D4FF;
+            color: #0F1923;
+            font-weight: 600;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-right: 1rem;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #00b5d8;
+        }
     </style>
 </head>
 <body class="font-sans antialiased h-screen flex flex-col relative">
@@ -94,7 +110,6 @@
         <div class="glass-card w-full max-w-md p-8 rounded-2xl animate-slide-up">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-20 h-20 bg-vida-card rounded-full mb-4 shadow-lg border border-gray-700 p-2">
-                    <!-- LOGO DO SISTEMA -->
                     <img src="sigas.svg" alt="Logotipo sigaS" class="w-full h-full object-contain">
                 </div>
                 <h1 class="text-3xl font-bold text-white tracking-tight">siga<span class="text-vida-cyan">S</span></h1>
@@ -102,7 +117,7 @@
             </div>
 
             <form id="login-form" class="space-y-6">
-                <!-- Select de perfil removido conforme solicitado -->
+                <!-- Login forçado como Profissional -->
                 <button type="submit" class="w-full text-vida-bg bg-vida-cyan hover:bg-opacity-90 font-bold rounded-lg text-md px-5 py-3 text-center transition-all flex items-center justify-center gap-2 mt-4">
                     <span>Entrar no Sistema</span>
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
@@ -156,23 +171,55 @@
             <div class="p-4 md:p-8 w-full max-w-7xl mx-auto">
 
                 <!-- ==========================================
-                     ECRÃ 2: PERFIL DO PACIENTE (PRÉ-CARREGADO)
+                     ECRÃ 2: PERFIL DO PACIENTE & PESQUISA
                      ========================================== -->
                 <div id="view-profissional" class="view-section hidden animate-fade-in space-y-6">
                     <div>
                         <h2 class="text-2xl font-bold text-white">Atendimento ao Paciente</h2>
-                        <p class="text-gray-400 text-sm">Busque o histórico unificado da rede municipal.</p>
+                        <p class="text-gray-400 text-sm">Pesquise o histórico unificado da rede municipal.</p>
                     </div>
 
-                    <!-- Caixa de Pesquisa Estática (Readonly) -->
+                    <!-- Caixa de Pesquisa Editável -->
                     <div class="glass-card p-6 rounded-xl">
                         <div class="flex flex-col md:flex-row gap-4">
                             <div class="flex-1 relative">
-                                <i data-lucide="search" class="w-5 h-5 text-gray-500 absolute left-3 top-3.5"></i>
-                                <!-- Input bloqueado (readonly) e com estilo de desativado -->
-                                <input type="text" id="search-input" value="123.456.789-00" readonly class="w-full bg-[#0b1219] border border-gray-800 text-gray-400 rounded-lg pl-10 p-3 outline-none cursor-not-allowed select-none">
+                                <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"></i>
+                                <input type="text" id="search-input" placeholder="Pesquisar por Nome ou CPF..." class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg pl-10 p-3 outline-none focus:border-vida-cyan transition-colors">
                             </div>
-                            <!-- Botão removido, já que é estático -->
+                            <button onclick="searchPatient()" class="bg-vida-card hover:bg-vida-hover border border-gray-600 text-white font-medium rounded-lg px-6 py-3 transition-colors">Buscar</button>
+                        </div>
+                    </div>
+
+                    <!-- Seleção Rápida de Pacientes (Quick Select) -->
+                    <div id="patient-empty-state" class="flex flex-col items-center justify-center py-8">
+                        <div class="w-full max-w-4xl text-left bg-vida-card/50 p-6 rounded-xl border border-gray-700/50">
+                            <div class="flex items-center gap-3 mb-5">
+                                <div class="bg-vida-cyan/10 p-2 rounded-full">
+                                    <i data-lucide="users" class="w-5 h-5 text-vida-cyan"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-white">Pacientes na Fila (Mockups)</h3>
+                            </div>
+                            <p class="text-sm text-gray-400 mb-4">Clique num dos pacientes abaixo para carregar o respetivo prontuário clínico:</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="quickSelect('123.456.789-00')" class="bg-[#0F1923] border border-gray-700 hover:border-vida-cyan hover:shadow-lg hover:shadow-vida-cyan/10 p-4 rounded-lg text-left transition-all group">
+                                    <div class="font-bold text-white group-hover:text-vida-cyan transition-colors text-lg">João Silva</div>
+                                    <div class="text-xs text-gray-500 mt-2 flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> 123.456.789-00</div>
+                                    <div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> Bairro Centro</div>
+                                </button>
+                                
+                                <button onclick="quickSelect('987.654.321-00')" class="bg-[#0F1923] border border-gray-700 hover:border-vida-green hover:shadow-lg hover:shadow-vida-green/10 p-4 rounded-lg text-left transition-all group">
+                                    <div class="font-bold text-white group-hover:text-vida-green transition-colors text-lg">Maria Oliveira</div>
+                                    <div class="text-xs text-gray-500 mt-2 flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> 987.654.321-00</div>
+                                    <div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> Jardim Norte</div>
+                                </button>
+                                
+                                <button onclick="quickSelect('456.789.123-00')" class="bg-[#0F1923] border border-gray-700 hover:border-purple-400 hover:shadow-lg hover:shadow-purple-400/10 p-4 rounded-lg text-left transition-all group">
+                                    <div class="font-bold text-white group-hover:text-purple-400 transition-colors text-lg">Carlos Souza</div>
+                                    <div class="text-xs text-gray-500 mt-2 flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> 456.789.123-00</div>
+                                    <div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> Vila Sul</div>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -190,7 +237,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- BOTÃO NOVO ATENDIMENTO -->
                             <button onclick="openRegistroClinico()" class="w-full md:w-auto bg-vida-green hover:bg-opacity-90 text-vida-bg font-bold rounded-lg px-5 py-3 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-vida-green/20">
                                 <i data-lucide="stethoscope" class="w-5 h-5"></i> Registrar Novo Atendimento
                             </button>
@@ -200,6 +246,10 @@
                         <div class="glass-card rounded-xl overflow-hidden">
                             <div class="p-5 border-b border-gray-700 flex justify-between items-center bg-gray-800/30">
                                 <h4 class="text-lg font-semibold text-white">Exames Anteriores na Rede</h4>
+                                <!-- Botão de Adicionar Exame -->
+                                <button onclick="openNovoExame()" class="bg-vida-cyan hover:bg-opacity-90 text-vida-bg font-semibold text-sm px-4 py-2 rounded flex items-center gap-2 transition-colors shadow-lg shadow-vida-cyan/20">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> Adicionar Exame
+                                </button>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm text-left text-gray-300">
@@ -208,7 +258,7 @@
                                             <th class="px-6 py-4">Exame</th>
                                             <th class="px-6 py-4">Data</th>
                                             <th class="px-6 py-4">Local</th>
-                                            <th class="px-6 py-4">Resultado</th>
+                                            <th class="px-6 py-4">Resultado / Ficheiro</th>
                                         </tr>
                                     </thead>
                                     <tbody id="exams-table-body" class="divide-y divide-gray-800">
@@ -221,10 +271,60 @@
                 </div>
 
                 <!-- ==========================================
-                     NOVA TELA: REGISTRO CLÍNICO E SINTOMAS
+                     ECRÃ ADICIONAL: IMPORTAR NOVO EXAME
+                     ========================================== -->
+                <div id="view-novo-exame" class="view-section hidden animate-fade-in space-y-6 max-w-2xl mx-auto">
+                    
+                    <button onclick="switchView('profissional')" class="text-vida-cyan hover:text-white flex items-center gap-2 text-sm font-medium transition-colors mb-4">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao Perfil do Paciente
+                    </button>
+
+                    <div class="glass-card p-6 rounded-xl border-t-4 border-t-vida-cyan">
+                        <div class="flex justify-between items-end mb-6 pb-4 border-b border-gray-800">
+                            <div>
+                                <h2 class="text-2xl font-bold text-white">Adicionar Novo Exame</h2>
+                                <p class="text-gray-400 text-sm mt-1">Anexar ficheiro ao prontuário de <span id="exame-pat-name" class="font-bold text-white">Paciente</span></p>
+                            </div>
+                        </div>
+
+                        <form id="form-novo-exame" class="space-y-6" onsubmit="salvarNovoExame(event)">
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Título do Exame / Procedimento</label>
+                                <input type="text" id="novo-exame-titulo" required placeholder="Ex: Ressonância Magnética, Hemograma..." class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg p-3 outline-none focus:border-vida-cyan transition-colors">
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Data da Realização</label>
+                                    <input type="date" id="novo-exame-data" required class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg p-3 outline-none focus:border-vida-cyan transition-colors" style="color-scheme: dark;">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Local de Realização (UBS/Clínica)</label>
+                                    <input type="text" id="novo-exame-local" required value="Clínica Externa" class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg p-3 outline-none focus:border-vida-cyan transition-colors">
+                                </div>
+                            </div>
+
+                            <div class="bg-[#0F1923] border border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-vida-cyan transition-colors cursor-pointer" onclick="document.getElementById('file-upload-text').innerText = 'exame_paciente.pdf (Anexado)'; showToast('Ficheiro anexado com sucesso!');">
+                                <i data-lucide="file-up" class="w-10 h-10 text-gray-400 mx-auto mb-3"></i>
+                                <label class="block text-sm font-medium text-gray-300 mb-2 cursor-pointer">Importar Resultado em PDF</label>
+                                <div class="inline-block bg-vida-cyan text-vida-bg font-semibold py-2 px-4 rounded-md transition-colors mt-1">
+                                    <span id="file-upload-text">Selecionar Ficheiro...</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">Clique aqui para simular o anexo do exame.</p>
+                            </div>
+
+                            <button type="submit" class="w-full bg-vida-cyan text-vida-bg font-bold rounded-lg px-6 py-4 hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 text-lg">
+                                <i data-lucide="check-circle" class="w-6 h-6"></i> Guardar Exame no Prontuário
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     ECRÃ 3: REGISTRO CLÍNICO (SINTOMAS)
                      ========================================== -->
                 <div id="view-registro" class="view-section hidden animate-fade-in space-y-6 max-w-4xl mx-auto">
-                    
                     <button onclick="switchView('profissional')" class="text-vida-cyan hover:text-white flex items-center gap-2 text-sm font-medium transition-colors mb-4">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao Perfil do Paciente
                     </button>
@@ -232,61 +332,38 @@
                     <div class="glass-card p-6 rounded-xl border-t-4 border-t-vida-green">
                         <div class="flex justify-between items-end mb-6 pb-4 border-b border-gray-800">
                             <div>
-                                <h2 class="text-2xl font-bold text-white">Registro de Prontuário</h2>
+                                <h2 class="text-2xl font-bold text-white">Registo de Prontuário</h2>
                                 <p class="text-gray-400 text-sm mt-1">Paciente: <span id="reg-pat-name" class="font-bold text-white">João Silva</span></p>
                             </div>
                             <div class="text-sm text-gray-500">Data: <span id="reg-date">25/04/2026</span></div>
                         </div>
 
                         <form id="form-atendimento" class="space-y-8" onsubmit="salvarAtendimento(event)">
-                            
-                            <!-- Bloco 1: Alergias -->
                             <div>
                                 <h3 class="text-white font-medium mb-3 flex items-center gap-2">
                                     <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i> Alergias e Restrições
                                 </h3>
-                                <input type="text" id="reg-alergias" placeholder="Ex: Dipirona, Penicilina, Frutos do mar (Deixe em branco se não houver)" class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg p-3 outline-none focus:border-amber-500 transition-colors">
+                                <input type="text" id="reg-alergias" placeholder="Ex: Dipirona, Penicilina (Deixe em branco se não houver)" class="w-full bg-[#0F1923] border border-gray-700 text-white rounded-lg p-3 outline-none focus:border-amber-500 transition-colors">
                             </div>
 
-                            <!-- Bloco 2: Sintomas -->
                             <div>
                                 <h3 class="text-white font-medium mb-3 flex items-center gap-2">
                                     <i data-lucide="activity" class="w-5 h-5 text-vida-cyan"></i> Sintomas Relatados
                                 </h3>
                                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <label class="cursor-pointer relative">
-                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Febre">
-                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Febre</div>
-                                    </label>
-                                    <label class="cursor-pointer relative">
-                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Dor no corpo">
-                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Dor no corpo</div>
-                                    </label>
-                                    <label class="cursor-pointer relative">
-                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Manchas na pele">
-                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Manchas na pele</div>
-                                    </label>
-                                    <label class="cursor-pointer relative">
-                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Tosse">
-                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Tosse</div>
-                                    </label>
-                                    <label class="cursor-pointer relative">
-                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Falta de ar">
-                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Falta de ar</div>
-                                    </label>
-                                    <label class="cursor-pointer relative">
-                                        <input type="checkbox" class="custom-checkbox sr-only peer" value="Coriza">
-                                        <div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Coriza</div>
-                                    </label>
+                                    <label class="cursor-pointer relative"><input type="checkbox" class="custom-checkbox sr-only peer" value="Febre"><div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Febre</div></label>
+                                    <label class="cursor-pointer relative"><input type="checkbox" class="custom-checkbox sr-only peer" value="Dor no corpo"><div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Dor no corpo</div></label>
+                                    <label class="cursor-pointer relative"><input type="checkbox" class="custom-checkbox sr-only peer" value="Manchas"><div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Manchas na pele</div></label>
+                                    <label class="cursor-pointer relative"><input type="checkbox" class="custom-checkbox sr-only peer" value="Tosse"><div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Tosse</div></label>
+                                    <label class="cursor-pointer relative"><input type="checkbox" class="custom-checkbox sr-only peer" value="Falta de ar"><div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Falta de ar</div></label>
+                                    <label class="cursor-pointer relative"><input type="checkbox" class="custom-checkbox sr-only peer" value="Coriza"><div class="p-3 rounded-lg border border-gray-700 text-center text-gray-400 hover:border-gray-500 transition-all">Coriza</div></label>
                                 </div>
                             </div>
 
-                            <!-- Bloco 3: Diagnóstico -->
                             <div class="bg-vida-bg p-5 rounded-xl border border-gray-700">
                                 <h3 class="text-white font-medium mb-3 flex items-center gap-2">
                                     <i data-lucide="microscope" class="w-5 h-5 text-purple-400"></i> Diagnóstico (Presuntivo / Confirmado)
                                 </h3>
-                                <p class="text-xs text-gray-400 mb-3">Este dado alimenta diretamente o painel epidemiológico do município.</p>
                                 <select id="reg-diagnostico" required class="w-full bg-[#1A2535] border border-gray-600 text-white rounded-lg p-3 outline-none focus:border-purple-400 cursor-pointer">
                                     <option value="">Selecione a doença detetada...</option>
                                     <option value="Dengue">Dengue</option>
@@ -298,24 +375,21 @@
                             </div>
 
                             <button type="submit" class="w-full bg-vida-cyan text-vida-bg font-bold rounded-lg px-6 py-4 hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 text-lg">
-                                <i data-lucide="save" class="w-6 h-6"></i> Salvar e Alimentar Sistema
+                                <i data-lucide="save" class="w-6 h-6"></i> Guardar e Alimentar Sistema
                             </button>
                         </form>
                     </div>
                 </div>
 
-
                 <!-- ==========================================
-                     ECRÃ 3: DASHBOARD EPIDEMIOLÓGICO (GERAL)
+                     ECRÃ 4: DASHBOARD EPIDEMIOLÓGICO
                      ========================================== -->
                 <div id="view-dashboard" class="view-section hidden animate-fade-in w-full space-y-6 pb-10">
-                    
                     <div>
                         <h2 class="text-2xl font-bold text-white">Painel Epidemiológico Municipal</h2>
                         <p class="text-gray-400 text-sm">Monitorização de doenças e atendimentos por região em tempo real.</p>
                     </div>
 
-                    <!-- CARTÕES DE TOPO -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="glass-card p-5 rounded-xl border-t-2 border-t-vida-cyan">
                             <p class="text-sm text-gray-400 font-medium mb-1">Total de Atendimentos</p>
@@ -331,7 +405,6 @@
                         </div>
                     </div>
 
-                    <!-- GRÁFICO: DOENÇAS POR REGIÃO -->
                     <div class="glass-card p-5 rounded-xl flex flex-col">
                         <div class="flex justify-between items-start mb-4">
                             <h3 class="text-lg font-semibold text-white flex items-center gap-2">
@@ -339,56 +412,61 @@
                             </h3>
                             <span class="bg-purple-400/10 text-purple-400 text-xs px-2 py-1 rounded border border-purple-400/20">Ao vivo</span>
                         </div>
-                        <p class="text-sm text-gray-400 mb-4">Atualizado automaticamente a cada novo registo clínico feito nas UBS.</p>
                         <div class="flex-1 relative w-full h-[350px]">
                             <canvas id="chartDoencasRegiao"></canvas>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        
-                        <!-- MAPA DE CALOR DA CIDADE (IMAGEM) -->
                         <div class="glass-card p-5 rounded-xl flex flex-col relative" id="heat-map-container">
                             <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                                 <i data-lucide="map" class="w-5 h-5 text-vida-cyan"></i> Mapa de Calor Municipal
                             </h3>
                             <div class="flex-1 bg-[#0F1923] rounded-lg border border-gray-700 p-1 relative overflow-hidden min-h-[250px]">
-                                <!-- Imagem estática do Mapa de Calor -->
                                 <img src="mapa_calor.jpg" alt="Mapa de Calor de Cornélio Procópio" class="w-full h-full object-cover rounded-md">
                             </div>
                         </div>
 
-                        <!-- LISTA DE ALERTAS -->
                         <div class="glass-card p-5 rounded-xl">
                             <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                                 <i data-lucide="siren" class="w-5 h-5 text-red-500"></i> Alertas Gerados
                             </h3>
-                            <div class="space-y-3" id="alert-list">
-                                <!-- Conteúdo Dinâmico -->
-                            </div>
+                            <div class="space-y-3" id="alert-list"></div>
                         </div>
                     </div>
-
                 </div>
 
             </div>
         </main>
     </div>
 
-    <!-- SCRIPTS E LÓGICA (MOCKADA) -->
     <script>
         lucide.createIcons();
 
         // ==========================================
-        // BASE DE DADOS MOCKADA & DINÂMICA
+        // BASE DE DADOS MOCKADA (Vários Pacientes e Exames)
         // ==========================================
-        // APENAS JOÃO SILVA NO SISTEMA (PRÉ-CARREGADO)
         const pacientes = [
-            { id: 1, nome: "João Silva", idade: 45, cpf: "123.456.789-00", bairro: "Centro" }
+            { id: 1, nome: "João Silva", idade: 45, cpf: "123.456.789-00", bairro: "Centro" },
+            { id: 2, nome: "Maria Oliveira", idade: 32, cpf: "987.654.321-00", bairro: "Jardim Norte" },
+            { id: 3, nome: "Carlos Souza", idade: 67, cpf: "456.789.123-00", bairro: "Vila Sul" }
         ];
 
-        const exames = [
-            { pacId: 1, tipo: "Hemograma Completo", data: "10/04/2026", res: "Normal" }
+        // Múltiplos exames para cada pessoa
+        let exames = [
+            // João
+            { pacId: 1, tipo: "Hemograma Completo", data: "10/04/2026", local: "Rede Municipal", res: "Normal" },
+            { pacId: 1, tipo: "Raio-X Tórax", data: "15/03/2026", local: "Clínica Vida", res: "Sem alterações" },
+            { pacId: 1, tipo: "Glicemia em Jejum", data: "20/02/2026", local: "Rede Municipal", res: "Normal" },
+            // Maria
+            { pacId: 2, tipo: "Ultrassom Obstétrico", data: "22/04/2026", local: "Centro da Mulher", res: "Normal" },
+            { pacId: 2, tipo: "Exame de Urina", data: "05/04/2026", local: "Rede Municipal", res: "Infeção leve" },
+            { pacId: 2, tipo: "Hemograma Completo", data: "05/04/2026", local: "Rede Municipal", res: "Anemia" },
+            // Carlos
+            { pacId: 3, tipo: "Eletrocardiograma", data: "18/04/2026", local: "Hospital do Coração", res: "Arritmia" },
+            { pacId: 3, tipo: "Ecocardiograma", data: "10/04/2026", local: "Hospital do Coração", res: "Normal" },
+            { pacId: 3, tipo: "Colesterol Total", data: "01/03/2026", local: "Rede Municipal", res: "Elevado" },
+            { pacId: 3, tipo: "Teste de Esforço", data: "15/01/2026", local: "Clínica Vida", res: "Normal" }
         ];
 
         let dadosEpidemiologicos = {
@@ -402,17 +480,15 @@
         let chartInstances = {};
 
         // ==========================================
-        // CONTROLO DE VISTAS (TELAS)
+        // LOGIN & CONTROLO DE VISTAS
         // ==========================================
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const role = 'profissional'; // Forçado a ser sempre profissional
-            
             document.getElementById('login-screen').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                setupLayout(role);
+                setupLayout();
             }, 500);
         });
 
@@ -422,10 +498,13 @@
             login.classList.remove('hidden');
             setTimeout(() => { login.style.opacity = '1'; }, 50);
             
-            // O paciente João continuará a ser carregado ao entrar de novo
+            currentPatient = null;
+            document.getElementById('patient-data-container').classList.add('hidden');
+            document.getElementById('patient-empty-state').classList.remove('hidden');
+            document.getElementById('search-input').value = '';
         }
 
-        function setupLayout(role) {
+        function setupLayout() {
             const navContainer = document.getElementById('sidebar-nav');
             const mobileNavContainer = document.getElementById('mobile-nav');
 
@@ -442,8 +521,6 @@
             `;
             
             switchView('profissional');
-            searchPatient(); // Pré-carrega o João automaticamente ao entrar
-            
             mobileNavContainer.innerHTML = navContainer.innerHTML;
             lucide.createIcons();
         }
@@ -453,7 +530,11 @@
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
             if(window.innerWidth < 768) toggleMobileMenu(true);
             
-            const activeTarget = viewId === 'registro' ? 'profissional' : viewId;
+            // Lógica para manter os botões da barra lateral corretos
+            let activeTarget = viewId;
+            if (viewId === 'registro' || viewId === 'novo-exame') {
+                activeTarget = 'profissional';
+            }
 
             document.querySelectorAll('.nav-item').forEach(item => {
                 const target = item.getAttribute('data-target');
@@ -471,11 +552,8 @@
                 }
             });
 
-            // Re-renderiza o dashboard ao aceder
             if(viewId === 'dashboard') {
                 renderDashboardData();
-            } else if (viewId === 'profissional' && currentPatient) {
-                document.getElementById('patient-data-container').classList.remove('hidden');
             }
         }
 
@@ -499,47 +577,120 @@
         }
 
         // ==========================================
-        // LÓGICA DO PROFISSIONAL (PESQUISA E REGISTO)
+        // PESQUISA E LISTAGEM
         // ==========================================
-        
+        function quickSelect(cpf) {
+            document.getElementById('search-input').value = cpf;
+            searchPatient();
+        }
+
         function searchPatient() {
-            // Como agora é estático, o query é sempre o mesmo
-            const query = "123.456.789-00"; 
-            const found = pacientes[0]; // João
+            const query = document.getElementById('search-input').value.toLowerCase();
+            if(query.trim() === '') {
+                document.getElementById('patient-empty-state').classList.remove('hidden');
+                document.getElementById('patient-data-container').classList.add('hidden');
+                return;
+            }
 
-            currentPatient = found;
-            document.getElementById('pat-name').innerText = found.nome;
-            document.getElementById('pat-initial').innerText = found.nome.charAt(0);
-            document.getElementById('pat-age').innerText = `${found.idade} anos`;
-            document.getElementById('pat-cpf').innerText = found.cpf;
-            document.getElementById('pat-bairro').innerText = found.bairro;
+            const found = pacientes.find(p => p.nome.toLowerCase().includes(query) || p.cpf.includes(query));
 
+            if (found) {
+                currentPatient = found;
+                document.getElementById('pat-name').innerText = found.nome;
+                document.getElementById('pat-initial').innerText = found.nome.charAt(0);
+                document.getElementById('pat-age').innerText = `${found.idade} anos`;
+                document.getElementById('pat-cpf').innerText = found.cpf;
+                document.getElementById('pat-bairro').innerText = found.bairro;
+
+                renderExamsTable();
+
+                document.getElementById('patient-empty-state').classList.add('hidden');
+                document.getElementById('patient-data-container').classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                showToast("Paciente não encontrado na base de dados municipal.");
+            }
+        }
+
+        function renderExamsTable() {
             const tbody = document.getElementById('exams-table-body');
             tbody.innerHTML = '';
-            const pacExames = exames.filter(e => e.pacId === found.id);
+            
+            // Filtra os exames do paciente atual e ordena pelos mais recentes
+            let pacExames = exames.filter(e => e.pacId === currentPatient.id);
+            // Ordenação simples pela data mockada DD/MM/AAAA (Apenas para demonstração visual)
+            pacExames.sort((a,b) => {
+                const dateA = a.data.split('/').reverse().join('');
+                const dateB = b.data.split('/').reverse().join('');
+                return dateB.localeCompare(dateA);
+            });
+
             if(pacExames.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhum exame cadastrado.</td></tr>`;
             } else {
                 pacExames.forEach(ex => {
                     tbody.innerHTML += `
                         <tr class="border-b border-gray-800 hover:bg-gray-800/30 transition-colors">
-                            <td class="px-6 py-4 text-white">${ex.tipo}</td>
+                            <td class="px-6 py-4 text-white font-medium">${ex.tipo}</td>
                             <td class="px-6 py-4">${ex.data}</td>
-                            <td class="px-6 py-4">Rede Municipal</td>
+                            <td class="px-6 py-4 text-gray-400">${ex.local}</td>
                             <td class="px-6 py-4">
                                 <button onclick="showToast('A abrir o PDF do exame...')" class="flex items-center gap-2 text-vida-cyan hover:text-white bg-vida-cyan/10 hover:bg-vida-cyan/20 px-3 py-1.5 rounded transition-colors" title="Visualizar Documento">
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
-                                    <span class="text-xs font-medium">Ver Laudo</span>
+                                    <span class="text-xs font-medium">Ver Exame</span>
                                 </button>
                             </td>
                         </tr>`;
                 });
             }
-
-            document.getElementById('patient-data-container').classList.remove('hidden');
-            lucide.createIcons();
         }
 
+        // ==========================================
+        // REGISTO DE NOVO EXAME (PDF)
+        // ==========================================
+        function openNovoExame() {
+            if(!currentPatient) return;
+            document.getElementById('exame-pat-name').innerText = currentPatient.nome;
+            
+            // Define data de hoje no formato YYYY-MM-DD para o input
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('novo-exame-data').value = hoje;
+            
+            document.getElementById('form-novo-exame').reset();
+            document.getElementById('novo-exame-data').value = hoje; // re-aplica após reset
+            document.getElementById('file-upload-text').innerText = 'Selecionar Ficheiro...'; // Limpa a simulação de arquivo
+            
+            switchView('novo-exame');
+        }
+
+        function salvarNovoExame(e) {
+            e.preventDefault();
+            
+            const titulo = document.getElementById('novo-exame-titulo').value;
+            const dataBruta = document.getElementById('novo-exame-data').value;
+            const local = document.getElementById('novo-exame-local').value;
+            
+            // Converte data de YYYY-MM-DD para DD/MM/YYYY
+            const [y, m, d] = dataBruta.split('-');
+            const dataFormatada = `${d}/${m}/${y}`;
+
+            // Adiciona o novo exame ao array mockado
+            exames.push({
+                pacId: currentPatient.id,
+                tipo: titulo,
+                data: dataFormatada,
+                local: local,
+                res: "Disponível"
+            });
+
+            showToast(`Ficheiro de "${titulo}" guardado com sucesso!`);
+            renderExamsTable(); // Atualiza a tabela imediatamente
+            switchView('profissional'); // Volta para o ecrã do paciente
+        }
+
+        // ==========================================
+        // REGISTO DE ATENDIMENTO (SINTOMAS)
+        // ==========================================
         function openRegistroClinico() {
             if(!currentPatient) return;
             document.getElementById('reg-pat-name').innerText = currentPatient.nome;
@@ -549,7 +700,6 @@
 
         function salvarAtendimento(e) {
             e.preventDefault();
-            
             const diagnostico = document.getElementById('reg-diagnostico').value;
             const bairro = currentPatient.bairro;
 
@@ -563,13 +713,12 @@
             }
             
             totalAtendimentos += 1;
-
             showToast(`Atendimento salvo! Diagnóstico de ${diagnostico} adicionado à região ${bairro}.`);
-            switchView('profissional'); // Volta para o perfil (que já está carregado)
+            switchView('profissional');
         }
 
         // ==========================================
-        // LÓGICA DO GESTOR (DASHBOARD DINÂMICO & MAPA)
+        // DASHBOARD
         // ==========================================
         Chart.defaults.color = '#9ca3af';
         Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
@@ -608,8 +757,6 @@
                 </div>
             `;
             lucide.createIcons();
-            
-            // Renderiza o gráfico de barras
             initCharts();
         }
 
@@ -622,11 +769,7 @@
             todasDoencas = Array.from(todasDoencas);
 
             const cores = {
-                "Dengue": "#ef4444",        // Vermelho
-                "COVID-19": "#00D4FF",      // Ciano
-                "Gripe/Virose": "#00E676",  // Verde
-                "Zika/Chikungunya": "#A855F7", // Roxo
-                "Outros": "#6b7280"         // Cinzento
+                "Dengue": "#ef4444", "COVID-19": "#00D4FF", "Gripe/Virose": "#00E676", "Zika/Chikungunya": "#A855F7", "Outros": "#6b7280"
             };
 
             const datasets = todasDoencas.map(doenca => {
@@ -641,21 +784,11 @@
             const ctxReg = document.getElementById('chartDoencasRegiao').getContext('2d');
             chartInstances['reg'] = new Chart(ctxReg, {
                 type: 'bar',
-                data: {
-                    labels: bairros,
-                    datasets: datasets
-                },
+                data: { labels: bairros, datasets: datasets },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, color: '#e2e8f0' } },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        x: { stacked: true, grid: { display: false } },
-                        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, color: '#e2e8f0' } } },
+                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
                 }
             });
         }
